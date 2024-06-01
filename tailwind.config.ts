@@ -7,6 +7,7 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
+    './src/app/**/*.{ts,tsx}',
   ],
   prefix: "",
   theme: {
@@ -15,6 +16,7 @@ const config = {
       padding: "2rem",
       screens: {
         "2xl": "1400px",
+        "3xl": "1800px",
       },
     },
     extend: {
