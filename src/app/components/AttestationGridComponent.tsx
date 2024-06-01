@@ -56,8 +56,17 @@ export function AttestationGridComponent ({
                     return (
                       <td
                         key={`${weekIndex}-${validatorIndex}`}
-                        className={`px-2 py-2 border border-l-2 border-zinc-800 ${getBgColor(attestation)}`}
-                      ></td>
+                      >
+                        <button
+                          className={`px-2 py-2 w-full h-8 border border-l border-zinc-800 ${getBgColor(attestation)} ${attestation && 'hover:opacity-80'}`}
+                          onClick={() => {
+                            if(attestation) {
+                              navigator.clipboard.writeText(attestation!.validator_index + "-" + attestation!.signature);
+                              alert("Attestation copied to clipboard")
+                            }
+                          }}
+                        ></button>
+                      </td>
                     );
                   })
                 : Array.from({ length: 7 }, (_, index) => (
