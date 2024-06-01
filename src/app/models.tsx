@@ -22,4 +22,6 @@ export type WeekInfo = {
 
 export type OverviewResponse = {
   week_infos: WeekInfo[];
+  xch_pubkeys: string[];
+  eth_addresses: string[];
 };
