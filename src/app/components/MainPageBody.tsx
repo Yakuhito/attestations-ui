@@ -1,18 +1,18 @@
 "use client";
 
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { defaultWagmiConfig, Web3Modal } from "@web3modal/wagmi";
+import { defaultWagmiConfig } from "@web3modal/wagmi";
 import { base, mainnet } from "viem/chains";
-import { useAccount, useSignTypedData, WagmiProvider } from "wagmi";
+import { WagmiProvider } from "wagmi";
 import Section from "./Section";
 import { ChallengeResponse, OverviewResponse } from "../models";
 import { AttestationGridComponent } from "./AttestationGridComponent";
 import { Suspense, useEffect, useState } from "react";
 import ValidatorIndexInput from "./ValidatorIndexInput";
-import { createWeb3Modal, useWalletInfo, useWeb3Modal } from "@web3modal/wagmi/react";
-import EthereumWalletButton from "./EthereumWalletButon";
+import { createWeb3Modal } from "@web3modal/wagmi/react";
 import EVMAttestationCreationComponent from "./EVMAttestationCreationComponent";
 import ChiaAttestationCreationComponent from "./ChiaAttestationCreationComponent";
+import AttestationVerificationComponent from "./AttestationVerificationComponent";
 
 const metadata = {
   name: 'warp.green Attestations',
@@ -104,6 +104,10 @@ function ActualMainBody() {
     <Section title="Submit EVM Attestation">
       <ValidatorIndexInput validatorIndex={validatorIndex} setValidatorIndex={setValidatorIndex} />
       <EVMAttestationCreationComponent validatorIndex={validatorIndex} response={response} refetch={refetch} />
+    </Section>
+    <Section title="Verify Attestations">
+      <p>You can verify that the attestations displayed as green are valid by clicking below.</p>
+      <AttestationVerificationComponent response={response} />
     </Section>
   </div>;
 }
