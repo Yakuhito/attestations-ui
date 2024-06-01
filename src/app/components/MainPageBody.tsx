@@ -48,6 +48,13 @@ createWeb3Modal({
 })
 
 export default function MainPageBody() {
+  // Required for GreenWeb
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).Buffer = Buffer
+    }
+  }, [])
+  
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
