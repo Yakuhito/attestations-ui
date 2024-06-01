@@ -82,7 +82,7 @@ function ActualMainBody() {
       <p className="text-md text-center break-words">{currentChallenge?.time_proof ?? "Loading..."}</p>
     </Section>
     <Section title="XCH Attestations Overview">
-      <AttestationGridComponent data={response} for_chain="xch"/>
+      <AttestationGridComponent data={response} for_chain="chia"/>
     </Section>
     <Section title="EVM Attestations Overview">
       <AttestationGridComponent data={response} for_chain="evm"/>
