@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { OverviewResponse } from "../models"
 import { verifyTypedData } from "viem";
+import { initializeBLS } from "clvm";
 
 export default function AttestationVerificationComponent({
   response
@@ -67,6 +68,18 @@ export default function AttestationVerificationComponent({
         }
       }
     }
+
+    setButtonText('Initializing BLS...');
+    try {
+      await initializeBLS();
+    } catch(e) {
+      alert('Error initializing BLS - refreshing the page so it works next time you click the button. Chia attestations not yet verified.');
+      location.reload();
+      return false;
+    }
+
+    // todo
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
     return !alerted;
   };
