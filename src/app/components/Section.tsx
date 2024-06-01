@@ -6,7 +6,7 @@ export default function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-md border-2 border-zinc-800 px-6 py-4 mt-4">
+    <div className="rounded-xl border-2 border-zinc-800 px-6 py-4 mt-4">
       <p className="text-2xl font-semibold mb-4">{title}</p>
       {children}
     </div>

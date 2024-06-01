@@ -65,15 +65,21 @@ export function AttestationGridComponent ({
                               alert("Attestation copied to clipboard")
                             }
                           }}
+                          disabled={!attestation}
                         ></button>
                       </td>
                     );
                   })
                 : Array.from({ length: 7 }, (_, index) => (
                     <td
-                      key={index}
-                      className="px-2 py-2 border border-zinc-800 bg-transparent"
-                    ></td>
+                      key={`${index}-loader`}
+                    >
+                      <button
+                        className={`px-2 py-2 w-full h-8 border border-l border-zinc-800 bg-transparent'}`}
+                        onClick={() => {}}
+                        disabled={true}
+                      ></button>
+                    </td>
                   ))}
             </tr>
           ))}
