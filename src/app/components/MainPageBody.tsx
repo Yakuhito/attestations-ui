@@ -10,6 +10,9 @@ import { AttestationGridComponent } from "./AttestationGridComponent";
 import { Suspense, useEffect, useState } from "react";
 import ValidatorIndexInput from "./ValidatorIndexInput";
 import { createWeb3Modal, useWalletInfo, useWeb3Modal } from "@web3modal/wagmi/react";
+import EthereumWalletButton from "./EthereumWalletButon";
+import EVMAttestationCreationComponent from "./EVMAttestationCreationComponent";
+import ChiaAttestationCreationComponent from "./ChiaAttestationCreationComponent";
 
 const metadata = {
   name: 'warp.green Attestations',
@@ -77,11 +80,6 @@ function ActualMainBody() {
   const response: OverviewResponse | null = data ?? null;
   const currentChallenge: ChallengeResponse | null = response !== null ? response.week_infos[0].challenge_info : null;
 
-  const pubkey = response?.xch_pubkeys[validatorIndex] ?? "";
-  const xchSignChallengeCommand = `python3 cli.py rekey sign-challenge --challenge ${currentChallenge?.challenge} --validator-index ${validatorIndex} --pubkey ${pubkey}`;
-
-  const [attestation, setAttestation] = useState('');
-
   return <div className="mt-8 mb-16">
     <Section
       title={currentChallenge !== null ? `Current Challenge for Week ${currentChallenge.week}` : 'Current Challenge'}
@@ -98,170 +96,14 @@ function ActualMainBody() {
     </Section>
     <Section title="Submit XCH Attestation">
       <ValidatorIndexInput validatorIndex={validatorIndex} setValidatorIndex={setValidatorIndex} />
-      {
-        (response !== null && response.week_infos[0].attestations.find((a) => a.validator_index === validatorIndex && a.chain_type === 'chia')) ? (
-          <p className="text-center text-green-500 pt-4">Attestation already submitted for this week - thank you!</p>
-        ) : (
-          <>
-            <p className="pt-2">Sign Command:</p>
-            <div className="mx-4">
-              <code className="break-all">{xchSignChallengeCommand}</code>
-            </div>
-            <button
-              className="mt-2 px-4 py-2 w-full border-2 border-zinc-800 hover:bg-zinc-700 font-medium rounded-xl"
-              onClick={() => {
-                navigator.clipboard.writeText(xchSignChallengeCommand)
-                alert('Copied to clipboard')
-              }}
-            >Copy Command to Clipboard</button>
-
-            <input
-              type="text"
-              placeholder={`Attestation (${validatorIndex}-...)`}
-              value={attestation}
-              onChange={(e) => setAttestation(e.target.value)}
-              className="mt-8 px-4 py-2 w-full border-2 border-zinc-800 rounded-xl bg-black focus:outline-none focus:shadow-none focus:border-zinc-700"
-            />
-            <button
-              className="mt-2 px-4 py-2 w-full border-2 border-green-500 hover:bg-green-500 hover:text-black font-medium rounded-xl text-green-500"
-              onClick={async () => {
-                if(!attestation) {
-                  return;
-                }
-
-                let attestationToSubmit = attestation;
-
-                if(!attestationToSubmit.startsWith(`${validatorIndex}-`)) {
-                  attestationToSubmit = `${validatorIndex}-${attestationToSubmit}`;
-                }
-              
-                const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}attestation`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    chain_type: 'chia',
-                    attestation: attestationToSubmit,
-                  }),
-                });
-                const respJSON = await resp.json();
-
-                console.log({ respJSON });
-
-                if(!respJSON.attestation_id) {
-                  alert(`Failed to submit attestation: ${JSON.stringify(respJSON)}`);
-                } else {
-                  alert('Attestation accepted :)');
-                  refetch();
-                }
-              }}
-            >Submit attestation</button>
-          </>
-        )
-      }
+      <ChiaAttestationCreationComponent response={response} validatorIndex={validatorIndex} refetch={refetch} />
     </Section>
     <Section title="EVM Attestations Overview">
       <AttestationGridComponent data={response} for_chain="evm"/>
     </Section>
     <Section title="Submit EVM Attestation">
       <ValidatorIndexInput validatorIndex={validatorIndex} setValidatorIndex={setValidatorIndex} />
-      {(response !== null && response.week_infos[0].attestations.find((a) => a.validator_index === validatorIndex && a.chain_type === 'evm')) ? (
-          <p className="text-center text-green-500 pt-4">Attestation already submitted for this week - thank you!</p>
-        ) : (
-          <>
-            <div className="flex py-4 items-center">
-              <span className="text-md pr-2">Wallet:</span> <EthereumWalletButton expectedAddress={response !== null ? response.eth_addresses[validatorIndex] : ''} />
-            </div>
-            <EVMAttestationCreationComponent validatorIndex={validatorIndex} challenge={currentChallenge?.challenge ?? ''} refetch={refetch} />
-          </>
-        )}
+      <EVMAttestationCreationComponent validatorIndex={validatorIndex} response={response} refetch={refetch} />
     </Section>
   </div>;
-}
-
-
-function EthereumWalletButton({
-  expectedAddress
-} : {
-  expectedAddress: string
-}) {
-  const { open } = useWeb3Modal()
-  const { walletInfo } = useWalletInfo()
-  const account = useAccount()
-  const isConnected = Boolean(walletInfo?.name)
-
-  return (
-    <>
-      <button onClick={() => open()} className={"px-2 py-2 border-2 border-zinc-800 rounded-xl text-base gap-2 flex" + (!isConnected ? 'shadow-sm shadow-white/80' : '')}>
-        {isConnected ? !!account.address ? `${account.address}` : 'Manage Wallet' : 'Connect ETH Wallet'}
-      </button>
-      {isConnected && expectedAddress !== account.address && <p className="pl-4 text-red-500">Wrong address</p>}
-    </>
-  )
-}
-
-function EVMAttestationCreationComponent({
-  validatorIndex,
-  challenge,
-  refetch
-} : {
-  validatorIndex: number,
-  challenge: string,
-  refetch: () => void
-}) {
-  const account = useAccount()
-  const { signTypedDataAsync } = useSignTypedData()
-
-  if(!account || !account.address) {
-    return (<></>);
-  }
-
-  return (
-    <button
-      className="mt-2 px-4 py-2 w-full border-2 border-green-500 hover:bg-green-500 hover:text-black font-medium rounded-xl text-green-500"
-      onClick={async () => {
-        let sig = await signTypedDataAsync({
-          domain: {
-            name: "warp.green Validator Attestations",
-            version: "1"
-          },
-          types: {
-            AttestationMessage: [
-              {name: "challenge", type: "bytes32"},
-              {name: "validatorIndex", type: "uint8"}
-            ]
-          },
-          primaryType: "AttestationMessage",
-          message: {
-            challenge: ('0x' + challenge) as `0x${string}`,
-            validatorIndex: validatorIndex
-          }
-        })
-
-        sig = `${validatorIndex}-` + sig.replace('0x', '');
-
-        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}attestation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            chain_type: 'evm',
-            attestation: sig,
-          }),
-        });
-        const respJSON = await resp.json();
-
-        console.log({ respJSON });
-
-        if(!respJSON.attestation_id) {
-          alert(`Failed to submit attestation: ${JSON.stringify(respJSON)}`);
-        } else {
-          alert('Attestation accepted :)');
-          refetch();
-        }
-      }}
-    >Generate & submit attestation</button>
-  );
 }
