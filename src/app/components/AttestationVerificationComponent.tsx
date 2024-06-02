@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { OverviewResponse } from "../models"
 import { verifyTypedData } from "viem";
-import { initializeBLS } from "clvm";
+import { initializeBLS, SExp, getBLSModule } from "clvm";
+import * as GreenWeb from 'greenwebjs';
 
 export default function AttestationVerificationComponent({
   response
@@ -63,7 +64,7 @@ export default function AttestationVerificationComponent({
         })
 
         if(!result) {
-          alert(`Attestation for week ${weekInfo.week_name} and validator index ${validatorIndex} is invalid`);
+          alert(`EVM attestation for week ${weekInfo.week_name} and validator index ${validatorIndex} is invalid`);
           alerted = true;
         }
       }
@@ -78,8 +79,51 @@ export default function AttestationVerificationComponent({
       return false;
     }
 
-    // todo
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    const pubkeys = response.xch_pubkeys;
+    for(let weekIndex = 0; weekIndex < response.week_infos.length; ++weekIndex) {
+      const weekInfo = response.week_infos[weekIndex];
+      const challenge = weekInfo.challenge_info?.challenge;
+
+      if(!challenge) {
+        continue;
+      }
+
+      setButtonText(`Verifying Chia attestations for ${weekInfo.week_name}...`);
+      for(let attestationIndex = 0 ; attestationIndex < weekInfo.attestations.length; ++attestationIndex) {
+        const attestation = weekInfo.attestations[attestationIndex];
+        const signature = attestation.signature;
+
+        if(attestation.chain_type === 'evm') {
+          continue;
+        }
+
+        const validatorIndex = attestation.validator_index;
+
+        const message = `Validator #${validatorIndex} attests having access to their cold private XCH key by signing this message with the following challenge: ${challenge}`
+        console.log({ message })
+        const messageHash = Buffer.from(
+            GreenWeb.util.sexp.sha256tree(
+              SExp.to(message)
+            ),
+            'hex'
+        );
+        console.log({ messageHash: GreenWeb.util.sexp.sha256tree(
+              SExp.to(message)
+            ) })
+
+        const { AugSchemeMPL, G1Element, G2Element } = getBLSModule();
+
+        const pubkey = G1Element.from_bytes(Buffer.from(pubkeys[validatorIndex], 'hex'));
+        const sig = G2Element.from_bytes(Buffer.from(signature, 'hex'));
+
+        const result = AugSchemeMPL.verify(pubkey, messageHash, sig);
+
+        if(!result) {
+          alert(`Chia attestation for week ${weekInfo.week_name} and validator index ${validatorIndex} is invalid`);
+          alerted = true;
+        }
+      }
+    }
 
     return !alerted;
   };
