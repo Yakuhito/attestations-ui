@@ -87,6 +87,29 @@ function ActualMainBody() {
   const response: OverviewResponse | null = data ?? null;
   const currentChallenge: ChallengeResponse | null = response !== null ? response.week_infos[0].challenge_info : null;
 
+  const [timeLeft, setTimeLeft] = useState('...');
+  useEffect(() => {
+    const targetDate = currentChallenge?.created_at
+      ? new Date(parseInt(currentChallenge.created_at) * 1000 + 7 * 24 * 60 * 60 * 1000)
+      : null;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const difference = (targetDate?.getTime() ?? 0) - now.getTime();
+      if (difference <= 0 || targetDate === null) {
+        setTimeLeft("...");
+      } else {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        const seconds = Math.floor((difference / 1000) % 60);
+        setTimeLeft(`Next challenge in: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [currentChallenge?.created_at]);
+
   return <div className="mt-8 mb-16">
     <Section
       title={currentChallenge !== null ? `Current Challenge for Week ${currentChallenge.week}` : 'Current Challenge'}
@@ -95,6 +118,7 @@ function ActualMainBody() {
       <p className="text-md text-center">{currentChallenge?.challenge ?? "Loading..."}</p>
       <p className="text-md font-semibold mt-4">Generated at:</p>
       <p className="text-md text-center">{currentChallenge?.created_at ? new Date(parseInt(currentChallenge?.created_at ?? 0) * 1000).toLocaleString() : "Loading..."}</p>
+      <p className="text-md text-center">{timeLeft}</p>
       <p className="text-md font-semibold mt-2">Time Proof:</p>
       <p className="text-md text-center break-words">{currentChallenge?.time_proof ?? "Loading..."}</p>
     </Section>
