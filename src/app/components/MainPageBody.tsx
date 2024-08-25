@@ -54,7 +54,7 @@ export default function MainPageBody() {
       (window as any).Buffer = Buffer
     }
   }, [])
-  
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -67,7 +67,7 @@ export default function MainPageBody() {
 }
 
 function ActualMainBody() {
-  const [ validatorIndex, setValidatorIndexInt ] = useState(0);
+  const [validatorIndex, setValidatorIndexInt] = useState(0);
   useEffect(() => {
     setValidatorIndexInt(parseInt(window.localStorage.getItem('validatorIndex') ?? "0"));
   }, []);
@@ -89,8 +89,9 @@ function ActualMainBody() {
 
   const [timeLeft, setTimeLeft] = useState('...');
   useEffect(() => {
+    const time_delta = (currentChallenge?.week ?? 13) <= 12 ? 7 : 7 * 4;
     const targetDate = currentChallenge?.created_at
-      ? new Date(parseInt(currentChallenge.created_at) * 1000 + 7 * 24 * 60 * 60 * 1000)
+      ? new Date(parseInt(currentChallenge.created_at) * 1000 + time_delta * 24 * 60 * 60 * 1000)
       : null;
 
     const interval = setInterval(() => {
@@ -108,11 +109,11 @@ function ActualMainBody() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentChallenge?.created_at]);
+  }, [currentChallenge?.created_at, currentChallenge?.week]);
 
   return <div className="mt-8 mb-16">
     <Section
-      title={currentChallenge !== null ? `Current Challenge for Week ${currentChallenge.week}` : 'Current Challenge'}
+      title={currentChallenge !== null ? currentChallenge.week <= 12 ? `Current Challenge for Week ${currentChallenge.week}` : `Current Challenge for Weeks ${currentChallenge.week}-${currentChallenge.week + 3}` : 'Current Challenge'}
     >
       <p className="text-md font-semibold mt-4">Challenge:</p>
       <p className="text-md text-center">{currentChallenge?.challenge ?? "Loading..."}</p>
@@ -123,14 +124,14 @@ function ActualMainBody() {
       <p className="text-md text-center break-words">{currentChallenge?.time_proof ?? "Loading..."}</p>
     </Section>
     <Section title="XCH Attestations Overview">
-      <AttestationGridComponent data={response} for_chain="chia"/>
+      <AttestationGridComponent data={response} for_chain="chia" />
     </Section>
     <Section title="Submit XCH Attestation">
       <ValidatorIndexInput validatorIndex={validatorIndex} setValidatorIndex={setValidatorIndex} />
       <ChiaAttestationCreationComponent response={response} validatorIndex={validatorIndex} refetch={refetch} />
     </Section>
     <Section title="EVM Attestations Overview">
-      <AttestationGridComponent data={response} for_chain="evm"/>
+      <AttestationGridComponent data={response} for_chain="evm" />
     </Section>
     <Section title="Submit EVM Attestation">
       <ValidatorIndexInput validatorIndex={validatorIndex} setValidatorIndex={setValidatorIndex} />
