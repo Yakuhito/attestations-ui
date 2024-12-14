@@ -64,7 +64,7 @@ export default function AttestationVerificationComponent({
         })
 
         if(!result) {
-          alert(`EVM attestation for week ${weekInfo.week_name} and validator index ${validatorIndex} is invalid`);
+          alert(`EVM attestation for period ${weekInfo.week_name} and validator index ${validatorIndex} is invalid`);
           alerted = true;
         }
       }
@@ -119,7 +119,7 @@ export default function AttestationVerificationComponent({
         const result = AugSchemeMPL.verify(pubkey, messageHash, sig);
 
         if(!result) {
-          alert(`Chia attestation for week ${weekInfo.week_name} and validator index ${validatorIndex} is invalid`);
+          alert(`Chia attestation for period ${weekInfo.week_name} and validator index ${validatorIndex} is invalid`);
           alerted = true;
         }
       }

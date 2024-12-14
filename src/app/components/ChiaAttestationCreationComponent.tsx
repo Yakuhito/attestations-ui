@@ -19,7 +19,7 @@ export default function ChiaAttestationCreationComponent({
 
   if(response !== null && response.week_infos[0].attestations.find((a) => a.validator_index === validatorIndex && a.chain_type === 'chia')) {
     return (
-      <p className="text-center text-green-500 pt-4">Attestation already submitted for this week - thank you!</p>
+      <p className="text-center text-green-500 pt-4">Attestation already submitted for this period - thank you!</p>
     );
   }
   return (
